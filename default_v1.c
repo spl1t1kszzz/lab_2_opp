@@ -24,7 +24,7 @@ void createMatrix(long double *matrix, int size, long double mainData, long doub
 
 long double vector_square_sum(const long double *vector, int size) {
     long double sum = 0.0;
-#   pragma omp parallel for reduction(+:sum)
+    #pragma omp parallel for reduction(+:sum)
     for (int i = 0; i < size; ++i) {
         sum += *(vector + i) * *(vector + i);
     }
