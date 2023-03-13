@@ -5,4 +5,4 @@ project(lab_2_opp C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(lab_2_opp parallel_v1.c)
+add_executable(lab_2_opp default.c)
