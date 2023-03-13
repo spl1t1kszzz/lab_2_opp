@@ -1,98 +1,111 @@
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <stdbool.h>
+#include <time.h>
+#include </opt/homebrew/Cellar/libomp/15.0.7/include/omp.h>
 
-#define n 5000
-#define epsilon 0.0001f
-#define t 0.0001f
-#define b_norm n * (n + 1) * (n + 1)
 
-double* create_matrix(int size) {
-    double *matrix = (double*) malloc(sizeof(double) * size * size);
+const int n = 1500;
+const long double t = 0.00001;
+const long double epsilon = 0.00001;
+
+void createMatrix(long double *matrix, int size, long double mainData, long double otherData) {
     for (int i = 0; i < size; ++i) {
         for (int j = 0; j < size; ++j) {
-            matrix[i * n + j] = (i == j) ? 2.0 : 1.0;
+            if (i == j)
+                *(matrix + i * n + j) = mainData;
+            else
+                *(matrix + i * n + j) = otherData;
         }
     }
-    return matrix;
 }
 
-double vector_square_sum(const double* vector, int size) {
-    double result = 0.0;
+long double vector_square_sum(const long double *vector, int size) {
+    long double sum = 0.0;
     for (int i = 0; i < size; ++i) {
-        result += vector[i] * vector[i];
+        sum += *(vector + i) * *(vector + i);
     }
-    return result;
+    return sum;
 }
 
-double* mult_mat_vec(const double* matrix, const double* vector, int size) {
-    double* result = (double*) malloc(sizeof(double) * size);
+
+void mult_mat_vec(const long double *matrix, const long double *vector, long double *result, int size) {
     for (int i = 0; i < size; ++i) {
-        double partial_sum = 0.0;
+        long double partSum = 0;
         for (int j = 0; j < size; ++j) {
-            partial_sum += matrix[i * n + j] * vector[j];
+            partSum += *(matrix + i * n + j) * *(vector + j);
         }
-        result[i] = partial_sum;
+        *(result + i) = partSum;
     }
-    return result;
 }
 
-void mult_vector_on_digit(double* vector, double digit, int size) {
+void mult_vec_digit(long double *vector, long double digit, int size) {
     for (int i = 0; i < size; ++i) {
-        vector[i] *= digit;
+        *(vector + i) = *(vector + i) * digit;
     }
 }
 
-
-double* sub_vect(const double* left, const double* right, int size) {
-    double* result = (double*) malloc(sizeof(double) * size);
+void sub_vect(const long double *left, const long double *right, long double *result, int size) {
     for (int i = 0; i < size; ++i) {
-        result[i] = left[i] - right[i];
+        *(result + i) = *(left + i) - *(right + i);
     }
-    return result;
 }
 
-
-double* simple_iteration(double* x, double* b, double* a, int size) {
-    double* ax = mult_mat_vec(a, x, size);
-    double* ax_b = sub_vect(ax, b, size);
-    mult_vector_on_digit(ax_b, t, size);
-    double* x_next = sub_vect(x, ax_b, size);
+void iteration(long double *x, long double *b, long double *matrix, long double param, int size, long double *result) {
+    long double *ax = malloc(sizeof(long double) * size);
+    long double *axB = malloc(sizeof(long double) * size);
+    mult_mat_vec((const long double *) matrix, x, ax, size);
+    sub_vect(ax, b, axB, size);
+    mult_vec_digit(axB, param, size);
+    sub_vect(x, axB, result, size);
     free(ax);
-    free(ax_b);
-    return x_next;
+    free(axB);
 }
 
-bool criteria(double* a, double *x, double* b,int size) {
-   double* ax = mult_mat_vec(a, x, size);
-   double* ax_b = sub_vect(ax, b, size);
-   const double ax_b_norm = vector_square_sum(ax_b, size);
-   free(ax);
-   free(ax_b);
-   return (ax_b_norm / b_norm) < epsilon;
+bool crit(long double *matrix, long double *x, long double *b, long double param, long double b_sqr_sum, int size) {
+    long double *ax = malloc(sizeof(long double) * size);
+    long double *axB = malloc(sizeof(long double) * size);
+    mult_mat_vec((const long double *) matrix, x, ax, size);
+    sub_vect(ax, b, axB, size);
+    long double axB_sqr_sum = vector_square_sum(axB,size);
+    free(ax);
+    free(axB);
+    return (axB_sqr_sum / b_sqr_sum) < param * param;
 }
 
-void fill_vector(double *vector, int size, double number) {
-    for (int i = 0; i < size; i++) {
-        vector[i] = number;
+
+void set_vector(const long double *src, long double *dest, int size) {
+    for (int i = 0; i < size; ++i) {
+        *(dest + i) = *(src + i);
     }
 }
+
 
 int main() {
-    double* a = create_matrix(n);
-    double* x = calloc(n, sizeof(double));
-    double* next_x;
-    double* b = malloc(sizeof(double) * n);
-    fill_vector(b, n, (double) (n + 1));
-    while (!criteria(a, x, b, n)) {
-        next_x = simple_iteration(x, b, a, n);
-        memcpy(x, next_x, sizeof(double) * n);
-        free(next_x);
+    double itime, ftime, exec_time;
+    long double *matrix = malloc(sizeof(long double) * n * n);
+    createMatrix(matrix, n, 2.0, 1.0);
+    long double *x = calloc(n, sizeof(long double));
+    long double *b = malloc(sizeof(long double) * n);
+    for (int i = 0; i < n; ++i) {
+        *(b + i) = n + 1;
     }
-    printf("%lf ", x[0]);
-    free(a);
-    free(b);
+    long double b_sqr_sum = vector_square_sum(b,n);
+    long double *nextX = calloc(n, sizeof(long double));
+    set_vector(x, nextX, n);
+    itime = omp_get_wtime();
+    while (!crit(matrix, nextX, b, epsilon, b_sqr_sum, n)) {
+        iteration(x, b, matrix, t, n, nextX);
+        set_vector(nextX, x, n);
+
+    }
+    ftime = omp_get_wtime();
+    exec_time = ftime - itime;
+    printf("\n\nTime taken is %f", exec_time);
+    free(matrix);
     free(x);
+    free(nextX);
+    free(b);
     return 0;
 }
