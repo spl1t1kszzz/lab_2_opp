@@ -1,5 +1,3 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "openmp-use-default-none"
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -136,5 +134,3 @@ int main() {
     free(x);
     return 0;
 }
-
-#pragma clang diagnostic pop

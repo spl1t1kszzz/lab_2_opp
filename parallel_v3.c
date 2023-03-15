@@ -1,5 +1,4 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "openmp-use-default-none"
+
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -11,25 +10,6 @@
 #define t 0.00001f
 #define epsilon 0.00001
 #define b_norm n * (n + 1) * (n + 1)
-
-void print_vector(const double *vector, int size) {
-    puts("Vector value:");
-    for (int i = 0; i < size; ++i) {
-        printf("%.10lf ", vector[i]);
-    }
-    printf("\n");
-}
-
-void print_matrix(const double *matrix, int size) {
-    puts("Matrix value:");
-    for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) {
-            printf("%lf ", matrix[i * size + j]);
-        }
-        printf("\n");
-    }
-    printf("\n");
-}
 
 double *create_matrix(double *matrix, int size) {
     int i, j;
@@ -99,7 +79,7 @@ void fill_vector(double *vector, int size, double number) {
 }
 
 
-int main() {
+int main(int argc, char** argv) {
     double start_time, end_time, exec_time;
     double *a = malloc(sizeof(double) * n * n);
     double *x = malloc(n * sizeof(double));
@@ -124,4 +104,3 @@ int main() {
     return 0;
 }
 
-#pragma clang diagnostic pop
