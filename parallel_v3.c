@@ -12,7 +12,6 @@
 #define epsilon 0.00001
 #define b_norm n * (n + 1) * (n + 1)
 
-
 void print_vector(const double *vector, int size) {
     puts("Vector value:");
     for (int i = 0; i < size; ++i) {
@@ -34,7 +33,7 @@ void print_matrix(const double *matrix, int size) {
 
 double *create_matrix(double *matrix, int size) {
     int i, j;
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(runtime) private(j) collapse(2)
     for (i = 0; i < size; ++i) {
         for (j = 0; j < size; ++j) {
             matrix[i * size + j] = (i == j) ? 2.0 : 1.0;
@@ -45,7 +44,7 @@ double *create_matrix(double *matrix, int size) {
 
 
 void vector_square_sum(const double *vector, int size, double *sum) {
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(runtime)
     for (int i = 0; i < size; i++) {
     #pragma omp atomic update
         sum[0] += vector[i] * vector[i];
@@ -54,7 +53,7 @@ void vector_square_sum(const double *vector, int size, double *sum) {
 
 
 void mult_mat_vec(const double *matrix, const double *vector, int size, double *next_x) {
-    #pragma omp parallel for
+#pragma omp parallel for schedule(runtime)
     for (int i = 0; i < size; ++i) {
         double partial_sum = 0.0;
         for (int j = 0; j < size; ++j) {
@@ -65,7 +64,7 @@ void mult_mat_vec(const double *matrix, const double *vector, int size, double *
 }
 
 void mult_vector_on_digit(double *vector, double digit, int size) {
-    #pragma omp parallel for
+#pragma omp parallel for schedule(runtime)
     for (int i = 0; i < size; ++i) {
         vector[i] *= digit;
     }
@@ -73,7 +72,7 @@ void mult_vector_on_digit(double *vector, double digit, int size) {
 
 
 void sub_vect(const double *left, const double *right, int size, double *res) {
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(runtime)
     for (int i = 0; i < size; ++i) {
         res[i] = left[i] - right[i];
     }
@@ -93,7 +92,7 @@ bool simple_iteration(double *x, double *b, double *a, int size, double *next_x,
 }
 
 void fill_vector(double *vector, int size, double number) {
-    #pragma omp parallel for
+#pragma omp parallel for schedule(runtime)
     for (int i = 0; i < size; i++) {
         vector[i] = number;
     }
