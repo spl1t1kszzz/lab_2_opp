@@ -9,4 +9,4 @@
 cd $PBS_O_WORKDIR
 echo
 echo "OMP_NUM_THREADS = $OMP_NUM_THREADS"
-./task1
+./parallel_v1.out
